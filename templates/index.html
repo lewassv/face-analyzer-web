@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core AI - Face Demographics Analyzer</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #131a2c;
+            --border-color: #222f4d;
+            --accent-blue: #00f2fe;
+            --accent-purple: #9b51e0;
+            --accent-green: #00ff87;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(155, 81, 224, 0.05) 0%, transparent 40%);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .card-title {
+            align-self: flex-start;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-blue);
+        }
+
+        .media-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #05070c;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        video, .output-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        video {
+            transform: scaleX(-1);
+        }
+
+        .output-img {
+            display: none;
+        }
+
+        /* Animasi Scanner Laser Efek AI */
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, transparent, var(--accent-blue), transparent);
+            box-shadow: 0 0 15px var(--accent-blue);
+            animation: scan 2s linear infinite;
+            z-index: 10;
+            display: none;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        /* Badge Status Interaktif */
+        .status-panel {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            box-sizing: border-box;
+        }
+
+        .status-active {
+            color: var(--accent-blue);
+            border-color: rgba(0, 242, 254, 0.2);
+            background-color: rgba(0, 242, 254, 0.02);
+        }
+
+        /* Grid Hasil Analisis Data */
+        .results-display {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            height: 100%;
+            align-content: center;
+        }
+
+        .placeholder-text {
+            grid-column: span 2;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+            padding: 40px 0;
+        }
+
+        .data-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .data-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .data-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .data-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: capitalize;
+        }
+
+        /* Warna khusus nilai data neon */
+        #res-age { color: var(--accent-blue); }
+        #res-gender { color: #ff7675; }
+        #res-race { color: #ffeaa7; }
+        #res-emotion { color: var(--accent-green); }
+
+        /* Loader Ring */
+        .spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 242, 254, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -25px;
+            margin-left: -25px;
+            z-index: 11;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .results-display {
+                grid-template-columns: 1fr;
+            }
+            .placeholder-text {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>CORE AI FACE DISCOVERY</h1>
+        <p class="subtitle">Sistem intelijen pengenal wajah. Izinkan akses kamera, posisikan wajah Anda, dan sistem akan mengonfigurasi data bio-demografis Anda secara otomatis.</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="card">
+            <div class="card-title">Live Vision Stream</div>
+            <div class="media-wrapper">
+                <div id="scanner" class="scanner-line"></div>
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+            </div>
+            <div id="status" class="status-panel">Menginisialisasi Perangkat Kamera...</div>
+        </div>
+
+        <div class="card" id="output-card">
+            <div class="card-title">Neural Network Analysis</div>
+            <div class="media-wrapper">
+                <div id="loader" class="spinner"></div>
+                <img id="captured-image" class="output-img" alt="Hasil Potret Bio-Wajah">
+            </div>
+            
+            <div class="status-panel" id="results-wrapper" style="margin-top: 20px; width: 100%; border: none; padding: 0; background: none;">
+                <div id="results" class="results-display">
+                    <div class="placeholder-text" id="placeholder">
+                        Menunggu tangkapan data biometrik visual...
+                    </div>
+                    <div class="data-box" style="display: none;">
+                        <span class="data-label">Perkiraan Usia</span>
+                        <span class="data-value" id="res-age">-</span>
+                    </div>
+                    <div class="data-box" style="display: none;">
+                        <span class="data-label">Identitas Gender</span>
+                        <span class="data-value" id="res-gender">-</span>
+                    </div>
+                    <div class="data-box" style="display: none;">
+                        <span class="data-label">Morfologi Ras</span>
+                        <span class="data-value" id="res-race">-</span>
+                    </div>
+                    <div class="data-box" style="display: none;">
+                        <span class="data-label">Status Emosional</span>
+                        <span class="data-value" id="res-emotion">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const capturedImage = document.getElementById('captured-image');
+        const statusPanel = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const scanner = document.getElementById('scanner');
+        const placeholder = document.getElementById('placeholder');
+        const dataBoxes = document.querySelectorAll('.data-box');
+
+        // Meminta hak akses kamera pengguna bawaan browser
+        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } })
+            .then(stream => {
+                video.srcObject = stream;
+                statusPanel.classList.add('status-active');
+                scanner.style.display = 'block';
+                
+                // Memulai hitung mundur otomatis 3 detik untuk pemotretan otomatis
+                let countdown = 3;
+                statusPanel.innerText = `BIO-SCAN BERSIAP: Otomatis memotret dalam [ ${countdown} ] ...`;
+                
+                const timer = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        statusPanel.innerText = `BIO-SCAN BERSIAP: Otomatis memotret dalam [ ${countdown} ] ...`;
+                    } else {
+                        clearInterval(timer);
+                        statusPanel.innerText = "MENANGKAP CITRA DIGITAL...";
+                        takeSnapshot();
+                    }
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("Akses kamera ditolak:", err);
+                statusPanel.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                statusPanel.style.color = "#ef4444";
+                statusPanel.innerText = "ERROR: Akses Hardware Kamera Ditolak.";
+            });
+
+        function takeSnapshot() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Gambar frame video terkini ke canvas tersembunyi
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+            // Memperbarui UI ke mode pengolahan algoritma AI
+            loader.style.display = 'block';
+            capturedImage.style.display = 'none';
+            placeholder.style.display = 'none';
+            dataBoxes.forEach(box => box.style.display = 'none');
+
+            // PERBAIKAN UTAMA JARINGAN: Menggunakan window.location.origin agar rute fetch dinamis & stabil
+            fetch(`${window.location.origin}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageDataUrl })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Respon server bermasalah');
+                return response.json();
+            })
+            .then(data => {
+                loader.style.display = 'none';
+                
+                if (data.status === 'success') {
+                    statusPanel.innerText = "BIO-SCAN DATA BERHASIL DIEKSTRAKSI!";
+                    
+                    // Menampilkan hasil jepretan wajah pintar
+                    capturedImage.src = data.image_url;
+                    capturedImage.style.display = 'block';
+
+                    // Mengisi elemen-elemen data bio kustom
+                    document.getElementById('res-age').innerText = `± ${data.age} Tahun`;
+                    document.getElementById('res-gender').innerText = data.gender === 'Man' ? 'Laki-Laki' : 'Perempuan';
+                    document.getElementById('res-race').innerText = translateRace(data.race);
+                    document.getElementById('res-emotion').innerText = translateEmotion(data.emotion);
+                    
+                    // Memunculkan kembali kartu data dengan transisi indah
+                    dataBoxes.forEach(box => box.style.display = 'flex');
+                } else {
+                    statusPanel.style.color = "#ef4444";
+                    statusPanel.innerText = "PROSES EKSPLORASI GAGAL.";
+                    placeholder.style.display = 'block';
+                    placeholder.innerText = data.message;
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerText = "Gagal terhubung ke server Flask. Pastikan Python tetap berjalan di Terminal VS Code.";
+                statusPanel.innerText = "SISTEM OFFLINE.";
+                console.error("Error:", error);
+            });
+        }
+
+        function translateRace(race) {
+            const races = {
+                'asian': 'Asia',
+                'indian': 'India',
+                'black': 'Afrika / Gelap',
+                'white': 'Kaukasia / Putih',
+                'middle eastern': 'Timur Tengah',
+                'latino hispanic': 'Latino'
+            };
+            return races[race.toLowerCase()] || race;
+        }
+
+        function translateEmotion(emotion) {
+            const emotions = {
+                'angry': 'Marah 😡',
+                'disgust': 'Jijik 🤢',
+                'fear': 'Takut 😨',
+                'happy': 'Bahagia 😊',
+                'sad': 'Sedih 😢',
+                'surprise': 'Terkejut 😲',
+                'neutral': 'Netral 😐'
+            };
+            return emotions[emotion.toLowerCase()] || emotion;
+        }
+    </script>
+</body>
+</html>
